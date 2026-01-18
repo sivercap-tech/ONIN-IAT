@@ -6,8 +6,8 @@ export enum StimulusType {
 export enum Category {
   BASHKIR = 'BASHKIR',
   RUSSIAN = 'RUSSIAN',
-  HORSE = 'HORSE',
-  COW = 'COW'
+  NATURE_A = 'NATURE_A',
+  NATURE_B = 'NATURE_B'
 }
 
 export interface Stimulus {
