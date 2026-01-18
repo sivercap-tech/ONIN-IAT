@@ -20,7 +20,7 @@ export const RUSSIAN_WORDS = [
 
 // Local Images
 // Assumes images are located in 'public/images/' and accessible via './images/'
-export const HORSE_IMAGES = Array.from({ length: 8 }, (_, i) => `.iat-with-redirect/images/horse_${i + 1}.jpg`);
+export const HORSE_IMAGES = Array.from({ length: 8 }, (_, i) => `./images/horse_${i + 1}.jpg`);
 
 export const COW_IMAGES = Array.from({ length: 8 }, (_, i) => `./images/cow_${i + 1}.jpg`);
 
