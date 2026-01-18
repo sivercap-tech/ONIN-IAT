@@ -4,6 +4,10 @@ import { Category, Stimulus, StimulusType } from './types';
 export const SUPABASE_URL = "https://gqulzoctsltwxmzvofwv.supabase.co"; 
 export const SUPABASE_KEY = "sb_publishable_alcHOMdoEOvJmuSvwEeeoQ_HnbodgT3";
 
+// URL for the second part of the test
+// TODO: Replace this with the actual URL of the second IAT test
+export const NEXT_TEST_URL = "https://example.com/second-iat-part";
+
 // Bashkir Words
 export const BASHKIR_WORDS = [
   "Юрта", "Сабантуй", "Тюбетейка", "Агидель", "Урал-Батыр", 
