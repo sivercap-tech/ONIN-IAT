@@ -222,6 +222,19 @@ const IATTest = ({ session, onComplete }: { session: any, onComplete: () => void
     return () => window.removeEventListener('keydown', listener);
   }, [handleInput]);
 
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    const target = e.target as HTMLImageElement;
+    target.style.display = 'none'; // Hide broken image
+    const parent = target.parentElement;
+    if (parent) {
+      const errorText = document.createElement('span');
+      errorText.innerText = 'IMG Error';
+      errorText.className = 'text-xs text-red-400';
+      parent.appendChild(errorText);
+    }
+    console.warn(`Failed to load image: ${target.src}`);
+  };
+
   if (finished) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-slate-900 text-white p-8 text-center">
@@ -316,7 +329,14 @@ const IATTest = ({ session, onComplete }: { session: any, onComplete: () => void
                   <h3 className="font-bold text-emerald-400 mb-2">Коровы (E)</h3>
                   <div className="flex justify-center gap-2 flex-wrap">
                      {COW_IMAGES.map((src, i) => (
-                       <img key={i} src={src} className="w-14 h-14 object-cover rounded border border-slate-600 bg-slate-800" alt={`Cow ${i+1}`} />
+                       <div key={i} className="flex items-center justify-center bg-slate-800 rounded border border-slate-600 w-14 h-14 overflow-hidden">
+                         <img 
+                           src={src} 
+                           className="w-full h-full object-cover" 
+                           alt={`Cow ${i+1}`}
+                           onError={handleImageError}
+                         />
+                       </div>
                      ))}
                   </div>
                 </div>
@@ -324,7 +344,14 @@ const IATTest = ({ session, onComplete }: { session: any, onComplete: () => void
                   <h3 className="font-bold text-blue-400 mb-2">Лошади (I)</h3>
                   <div className="flex justify-center gap-2 flex-wrap">
                      {HORSE_IMAGES.map((src, i) => (
-                       <img key={i} src={src} className="w-14 h-14 object-cover rounded border border-slate-600 bg-slate-800" alt={`Horse ${i+1}`} />
+                       <div key={i} className="flex items-center justify-center bg-slate-800 rounded border border-slate-600 w-14 h-14 overflow-hidden">
+                         <img 
+                           src={src} 
+                           className="w-full h-full object-cover" 
+                           alt={`Horse ${i+1}`}
+                           onError={handleImageError}
+                         />
+                       </div>
                      ))}
                   </div>
                 </div>
@@ -389,8 +416,16 @@ const IATTest = ({ session, onComplete }: { session: any, onComplete: () => void
             <img 
               src={currentStimulus.content} 
               alt="stimulus" 
+              onError={(e) => {
+                // Handle broken images in test flow
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+                console.error("Missing Stimulus Image:", target.src);
+              }}
               className="max-h-[30vh] md:max-h-[45vh] w-auto rounded-xl shadow-2xl border-4 border-slate-700 select-none pointer-events-none"
             />
+            {/* Fallback text if image breaks (only visible if image hidden) */}
+            <div className="hidden">Изображение не найдено</div>
           </div>
         )}
       </div>
