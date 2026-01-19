@@ -116,6 +116,9 @@ const IATTest = ({ session, onComplete }: { session: UserSession, onComplete: ()
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
+  // Debounce Ref
+  const lastInputTime = useRef(0);
+
   // Initialize blocks based on session group
   const blocks = useMemo(() => getBlocks(session.group), [session.group]);
   const currentBlock = blocks[currentBlockIndex];
@@ -203,6 +206,13 @@ const IATTest = ({ session, onComplete }: { session: UserSession, onComplete: ()
   }, [currentBlockIndex, results, finishTest]);
 
   const handleInput = useCallback((action: 'LEFT' | 'RIGHT' | 'SPACE') => {
+    // FIX: Debounce to prevent double-taps/ghost clicks (150ms buffer)
+    const now = performance.now();
+    if (now - lastInputTime.current < 150) {
+      return; 
+    }
+    lastInputTime.current = now;
+
     const state = stateRef.current;
     if (state.finished || state.isSaving || state.isTransitioning) return;
 
@@ -412,7 +422,7 @@ const IATTest = ({ session, onComplete }: { session: UserSession, onComplete: ()
               onClick={() => handleInput('SPACE')}
               className="fixed bottom-6 left-4 right-4 md:static md:w-auto bg-emerald-600 hover:bg-emerald-500 text-white text-xl font-bold py-3 md:py-4 px-12 rounded-full shadow-lg transition-transform active:scale-95 animate-pulse z-50"
             >
-              Далее
+              Начать тест
             </button>
           </div>
         )}
@@ -579,7 +589,7 @@ const IATTest = ({ session, onComplete }: { session: UserSession, onComplete: ()
                 target.style.display = 'none';
                 console.error("Missing Stimulus Image:", target.src);
               }}
-              className="max-h-[30vh] md:max-h-[45vh] w-auto rounded-xl shadow-2xl border-4 border-slate-700 select-none pointer-events-none"
+              className="max-h-[25vh] md:max-h-[45vh] w-auto rounded-xl shadow-2xl border-4 border-slate-700 select-none pointer-events-none"
             />
             <div className="hidden">Изображение не найдено</div>
           </div>
