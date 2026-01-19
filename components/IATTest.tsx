@@ -432,10 +432,10 @@ const IATTest = ({ session, onComplete }: { session: UserSession, onComplete: ()
         className="flex flex-col items-center justify-center min-h-screen bg-slate-900 text-white p-8 text-center max-w-5xl mx-auto cursor-pointer"
         onClick={() => handleInput('SPACE')} // Allow click to start
       >
-        <h2 className="text-2xl font-bold mb-4 text-blue-400">{currentBlock.title}</h2>
+        <h2 className="text-xl md:text-2xl font-bold mb-4 text-blue-400">{currentBlock.title}</h2>
         <div className="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-2xl mb-6 select-none w-full max-w-3xl">
-          <pre className="whitespace-pre-wrap font-sans text-xl leading-relaxed text-slate-200 mb-4">
-            {currentBlock.instruction}
+        <pre className="whitespace-pre-wrap font-sans text-sm md:text-xl leading-relaxed text-slate-200 mb-4">
+    {currentBlock.instruction}
           </pre>
           
           {/* Block 1: Words - Bashkir (Left), Russian (Right) */}
