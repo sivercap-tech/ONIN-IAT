@@ -3,9 +3,6 @@ import { STIMULI_POOL, BASHKIR_WORDS, RUSSIAN_WORDS, COW_IMAGES, HORSE_IMAGES, N
 import { Category, StimulusType, UserSession, BlockConfig } from '../types';
 import { saveResults, recordTransition } from '../services/supabaseService';
 
-//Count Last time
-const lastInputTime = useRef(0); 
-
 // Helper to get random item
 const getRandom = (arr: any[]) => arr[Math.floor(Math.random() * arr.length)];
 
@@ -213,8 +210,7 @@ const IATTest = ({ session, onComplete }: { session: UserSession, onComplete: ()
   }, [currentBlockIndex, results, finishTest]);
 
   const handleInput = useCallback((action: 'LEFT' | 'RIGHT' | 'SPACE') => {
-    const now = Date.now();;
-    if (now - stateRef.current.lastInputTime < 300) return;
+    const state = stateRef.current;
     if (state.finished || state.isSaving || state.isTransitioning) return;
 
     // Handle General Intro Screen
@@ -437,15 +433,15 @@ const IATTest = ({ session, onComplete }: { session: UserSession, onComplete: ()
         onClick={() => handleInput('SPACE')} // Allow click to start
       >
         <h2 className="text-2xl font-bold mb-4 text-blue-400">{currentBlock.title}</h2>
-        <div className="bg-slate-800 p-4 md:p-6 rounded-xl border border-slate-700 shadow-2xl mb-6 select-none w-full max-w-3xl">
-          <pre className="whitespace-pre-wrap font-sans text-sm md:text-x1 leading-relaxed text-slate-200 mb-4">
+        <div className="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-2xl mb-6 select-none w-full max-w-3xl">
+          <pre className="whitespace-pre-wrap font-sans text-xl leading-relaxed text-slate-200 mb-4">
             {currentBlock.instruction}
           </pre>
           
           {/* Block 1: Words - Bashkir (Left), Russian (Right) */}
           {currentBlock.id === 1 && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 text-left border-t border-slate-600 pt-4">
-              <div className="bg-slate-900/50 p-2 md:p-4 rounded-lg">
+              <div className="bg-slate-900/50 p-4 rounded-lg">
                 <h3 className="font-bold text-emerald-400 mb-2 text-center">Башкирские (E)</h3>
                 <div className="flex flex-wrap gap-2 justify-center">
                   {BASHKIR_WORDS.map(w => (
