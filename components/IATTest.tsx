@@ -591,27 +591,26 @@ const IATTest = ({ session, onComplete }: { session: UserSession, onComplete: ()
         )}
       </div>
 
-     
-      <div className="flex flex-col h-[100dvh] bg-slate-900 text-white overflow-hidden select-none">
-      <div className="p-4 pb-20 md:pb-8 flex gap-4 md:gap-8 w-full justify-center items-stretch h-auto min-h-[140px] md:min-h-[12rem] z-10 shrink-0">
-    <button 
-      className="flex-1 max-w-md bg-slate-800/90 backdrop-blur-sm border-2 border-slate-600 hover:border-emerald-500/50 hover:bg-slate-700 active:bg-slate-600 active:scale-95 rounded-2xl flex flex-col items-center justify-center transition-all shadow-lg active:shadow-inner group touch-manipulation"
-      onMouseDown={() => handleInput('LEFT')}
-      onTouchStart={(e) => { e.preventDefault(); handleInput('LEFT'); }}
-    >
-      <span className="text-4xl md:text-6xl font-extrabold text-emerald-400 mb-2 group-hover:text-emerald-300">E</span>
-      <span className="text-xs md:text-sm text-slate-400 uppercase tracking-widest font-bold">Лево</span>
-    </button>
-    <button 
-      className="flex-1 max-w-md bg-slate-800/90 backdrop-blur-sm border-2 border-slate-600 hover:border-blue-500/50 hover:bg-slate-700 active:bg-slate-600 active:scale-95 rounded-2xl flex flex-col items-center justify-center transition-all shadow-lg active:shadow-inner group touch-manipulation"
-      onMouseDown={() => handleInput('RIGHT')}
-      onTouchStart={(e) => { e.preventDefault(); handleInput('RIGHT'); }}
-    >
-       <span className="text-4xl md:text-6xl font-extrabold text-blue-400 mb-2 group-hover:text-blue-300">I</span>
-       <span className="text-xs md:text-sm text-slate-400 uppercase tracking-widest font-bold">Право</span>
-    </button>
-  </div>
-</div>
+      {/* Footer Controls */}
+      <div className="p-4 pb-8 flex gap-4 md:gap-8 w-full justify-center items-stretch h-36 md:h-48 z-10">
+        <button 
+          className="flex-1 max-w-md bg-slate-800/90 backdrop-blur-sm border-2 border-slate-600 hover:border-emerald-500/50 hover:bg-slate-700 active:bg-slate-600 active:scale-95 rounded-2xl flex flex-col items-center justify-center transition-all shadow-lg active:shadow-inner group touch-manipulation"
+          onMouseDown={() => handleInput('LEFT')}
+          onTouchStart={(e) => { e.preventDefault(); handleInput('LEFT'); }}
+        >
+          <span className="text-4xl md:text-6xl font-extrabold text-emerald-400 mb-2 group-hover:text-emerald-300">E</span>
+          <span className="text-xs md:text-sm text-slate-400 uppercase tracking-widest font-bold">Лево</span>
+        </button>
+        <button 
+          className="flex-1 max-w-md bg-slate-800/90 backdrop-blur-sm border-2 border-slate-600 hover:border-blue-500/50 hover:bg-slate-700 active:bg-slate-600 active:scale-95 rounded-2xl flex flex-col items-center justify-center transition-all shadow-lg active:shadow-inner group touch-manipulation"
+          onMouseDown={() => handleInput('RIGHT')}
+          onTouchStart={(e) => { e.preventDefault(); handleInput('RIGHT'); }}
+        >
+           <span className="text-4xl md:text-6xl font-extrabold text-blue-400 mb-2 group-hover:text-blue-300">I</span>
+           <span className="text-xs md:text-sm text-slate-400 uppercase tracking-widest font-bold">Право</span>
+        </button>
+      </div>
+    </div>
   );
 };
 
