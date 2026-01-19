@@ -357,6 +357,7 @@ const IATTest = ({ session, onComplete }: { session: UserSession, onComplete: ()
   }
 
   // General Intro Screen (before any blocks)
+// General Intro Screen (before any blocks)
   if (showGeneralIntro) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-slate-900 text-white p-4 text-center max-w-7xl mx-auto">
@@ -384,13 +385,11 @@ const IATTest = ({ session, onComplete }: { session: UserSession, onComplete: ()
           </div>
         )}
 
-        // patch 1.1
+        {/* Шаг 2: Примеры категорий */}
         {introStep === 1 && (
-          // Добавили pb-24 для мобилок, чтобы контент не перекрывался кнопкой
           <div className="bg-slate-800 p-2 md:p-8 rounded-xl border border-slate-700 shadow-2xl w-full flex flex-col items-center pb-24 md:pb-8">
             <p className="text-base md:text-2xl text-slate-300 mb-4 md:mb-6">Запомните категории и примеры:</p>
 
-            {/* Изменили grid-cols-1 на grid-cols-2 для мобилок, чтобы сэкономить место по вертикали */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-6 text-left mb-2 w-full">
               {/* Bashkirs */}
               <div className="bg-slate-900/60 p-2 md:p-4 rounded-lg border border-slate-700">
@@ -433,16 +432,18 @@ const IATTest = ({ session, onComplete }: { session: UserSession, onComplete: ()
               </div>
             </div>
 
-            {/* Кнопка теперь фиксирована внизу экрана на мобильных (fixed bottom-6) */}
             <button 
               onClick={() => handleInput('SPACE')}
               className="fixed bottom-6 left-4 right-4 md:static md:w-auto bg-emerald-600 hover:bg-emerald-500 text-white text-xl font-bold py-3 md:py-4 px-12 rounded-full shadow-lg transition-transform active:scale-95 animate-pulse z-50"
             >
-              Далее
+              Начать тест
             </button>
           </div>
-        );
-        }
+        )}
+
+      </div>
+    );
+  }
 
   // Instruction Screen (for Blocks)
   // patch 1.1
