@@ -592,7 +592,7 @@ const IATTest = ({ session, onComplete }: { session: UserSession, onComplete: ()
       </div>
 
       {/* Footer Controls */}
-      <div className="p-4 pb-8 flex gap-4 md:gap-8 w-full justify-center items-stretch h-36 md:h-48 z-10">
+      <div className="p-4 pb-8 mb-16 md:mb-0 flex gap-4 md:gap-8 w-full justify-center items-stretch h-36 md:h-48 z-10">
         <button 
           className="flex-1 max-w-md bg-slate-800/90 backdrop-blur-sm border-2 border-slate-600 hover:border-emerald-500/50 hover:bg-slate-700 active:bg-slate-600 active:scale-95 rounded-2xl flex flex-col items-center justify-center transition-all shadow-lg active:shadow-inner group touch-manipulation"
           onMouseDown={() => handleInput('LEFT')}
