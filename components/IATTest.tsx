@@ -25,11 +25,6 @@ const getBlocks = (group: 'A' | 'B'): BlockConfig[] => {
     ? "Нажимайте 'E' для БАШКИРЫ или ЛОШАДИ.\nНажимайте 'I' для РУССКИЕ или КОРОВЫ."
     : "Нажимайте 'E' для БАШКИРЫ или КОРОВЫ.\nНажимайте 'I' для РУССКИЕ или ЛОШАДИ.";
 
-  // After swapping words in Block 5 (Russian is now Left, Bashkir is Right)
-  // We need to swap the images to match the *opposite* pairing logic of the first combined block
-  // Group A: Needs Russian+Horse (Left) vs Bashkir+Cow (Right)
-  // Group B: Needs Russian+Cow (Left) vs Bashkir+Horse (Right)
-  
   const combinedBlock2_Left = isGroupA
     ? [Category.RUSSIAN, Category.HORSE]
     : [Category.RUSSIAN, Category.COW];
@@ -105,7 +100,6 @@ const getBlocks = (group: 'A' | 'B'): BlockConfig[] => {
 const IATTest = ({ session, onComplete }: { session: UserSession, onComplete: () => void }) => {
   // New State: General Instructions before starting blocks
   const [showGeneralIntro, setShowGeneralIntro] = useState(true);
-  // patch 1.1
   const [introStep, setIntroStep] = useState(0);
 
   const [currentBlockIndex, setCurrentBlockIndex] = useState(0);
@@ -162,8 +156,6 @@ const IATTest = ({ session, onComplete }: { session: UserSession, onComplete: ()
     setFinished(true);
     setIsSaving(true);
     
-    // Include group info in the payload implicitly via the session object or explicitly in the results structure if needed.
-    // Here we save the raw results, and the session object (containing group) is passed to the service.
     const response = await saveResults(session, {
       group: session.group,
       data: finalResults
@@ -190,7 +182,6 @@ const IATTest = ({ session, onComplete }: { session: UserSession, onComplete: ()
     if (stateRef.current.trialCount >= block.trials) {
       // End of block
       if (currentBlockIndex >= blocksLocal.length - 1) {
-        // Pass the current accumulated results to finishTest
         finishTest(results); 
         return;
       }
@@ -219,7 +210,6 @@ const IATTest = ({ session, onComplete }: { session: UserSession, onComplete: ()
     if (state.showGeneralIntro) {
       if (action === 'SPACE') {
         setShowGeneralIntro(false);
-        // We are already at block 0, instruction true by default.
       }
       return;
     }
@@ -251,14 +241,13 @@ const IATTest = ({ session, onComplete }: { session: UserSession, onComplete: ()
 
     if (correctSide !== pressedSide) {
       setMistake(true);
-      // In standard IAT, user must correct the mistake. Time continues.
     } else {
       const endTime = performance.now();
       const rt = endTime - state.startTime;
       
       const result = {
         blockId: block.id,
-        blockName: block.title, // Helpful for analysis
+        blockName: block.title,
         stimulusId: state.currentStimulus.id,
         category: state.currentStimulus.category,
         isCorrect: !state.mistake,
@@ -266,7 +255,6 @@ const IATTest = ({ session, onComplete }: { session: UserSession, onComplete: ()
         timestamp: Date.now()
       };
 
-      // Update results locally
       setResults(prev => [...prev, result]);
       
       const isLastBlock = state.currentBlockIndex >= state.blocks.length - 1;
@@ -280,21 +268,10 @@ const IATTest = ({ session, onComplete }: { session: UserSession, onComplete: ()
     }
   }, [nextTrial, results, finishTest]);
 
-  const handleShare = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      // setIsCopied(true); // Assuming this state exists or was meant to exist
-      // setTimeout(() => setIsCopied(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy: ', err);
-    }
-  };
-
   useEffect(() => {
     const listener = (e: KeyboardEvent) => {
-      // Use e.code to ignore keyboard layout (English vs Russian)
       if (e.code === 'Space') {
-        e.preventDefault(); // Prevent scrolling
+        e.preventDefault();
         handleInput('SPACE');
       }
       if (e.code === 'KeyE') handleInput('LEFT');
@@ -306,7 +283,7 @@ const IATTest = ({ session, onComplete }: { session: UserSession, onComplete: ()
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     const target = e.target as HTMLImageElement;
-    target.style.display = 'none'; // Hide broken image
+    target.style.display = 'none';
     const parent = target.parentElement;
     if (parent) {
       const errorText = document.createElement('span');
@@ -357,7 +334,6 @@ const IATTest = ({ session, onComplete }: { session: UserSession, onComplete: ()
   }
 
   // General Intro Screen (before any blocks)
-// General Intro Screen (before any blocks)
   if (showGeneralIntro) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-slate-900 text-white p-4 text-center max-w-7xl mx-auto">
@@ -446,7 +422,6 @@ const IATTest = ({ session, onComplete }: { session: UserSession, onComplete: ()
   }
 
   // Instruction Screen (for Blocks)
-  // patch 1.1
   if (isInstruction) {
     return (
       <div 
@@ -548,14 +523,6 @@ const IATTest = ({ session, onComplete }: { session: UserSession, onComplete: ()
     );
   }
 
-        </div>
-        <div className="animate-pulse text-emerald-400 font-bold text-lg">
-          Нажмите ПРОБЕЛ, чтобы начать
-        </div>
-      </div>
-    );
-  }
-
   // Test Screen
   return (
     <div className="flex flex-col h-screen bg-slate-900 text-white overflow-hidden select-none">
@@ -608,14 +575,12 @@ const IATTest = ({ session, onComplete }: { session: UserSession, onComplete: ()
               src={currentStimulus.content} 
               alt="stimulus" 
               onError={(e) => {
-                // Handle broken images in test flow
                 const target = e.target as HTMLImageElement;
                 target.style.display = 'none';
                 console.error("Missing Stimulus Image:", target.src);
               }}
               className="max-h-[30vh] md:max-h-[45vh] w-auto rounded-xl shadow-2xl border-4 border-slate-700 select-none pointer-events-none"
             />
-            {/* Fallback text if image breaks (only visible if image hidden) */}
             <div className="hidden">Изображение не найдено</div>
           </div>
         )}
