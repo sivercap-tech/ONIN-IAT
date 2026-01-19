@@ -307,7 +307,7 @@ const IATTest = ({ session, onComplete }: { session: UserSession, onComplete: ()
   if (finished) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-slate-900 text-white p-8 text-center">
-        <h1 className="text-4xl font-bold mb-4 text-emerald-400">Первая часть завершена!</h1>
+        <h1 className="text-4xl font-bold mb-4 text-emerald-400">Спасибо! И последнее.</h1>
         
         {isSaving ? (
           <div className="flex flex-col items-center">
@@ -335,7 +335,7 @@ const IATTest = ({ session, onComplete }: { session: UserSession, onComplete: ()
               onClick={handleNextTest}
               className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-lg font-bold text-lg transition-colors shadow-lg hover:scale-105 transform duration-200"
             >
-              Перейти ко второй части
+              Перейти к последней части
             </button>
           </div>
         )}
