@@ -14,26 +14,26 @@ const generateUUID = () => {
 const Dashboard = ({ startTest }: { startTest: () => void }) => {
   return (
     <div className="min-h-screen bg-slate-900 p-4 md:p-8 flex items-center justify-center">
-      <div className="max-w-4xl w-full grid grid-cols-1 gap-8">
+      <div className="max-w-4xl w-full grid grid-cols-1 gap-4 md:gap-8">
         
         {/* Header Section */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 mb-6 leading-tight drop-shadow-sm">
-            Имплицитные ассоциативные тесты
+        <div className="text-center mb-4 md:mb-8">
+          <h1 className="text-3xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 mb-4 md:mb-6 leading-tight drop-shadow-sm">
+            Социологический опрос
           </h1>
         </div>
 
         {/* Start Test Card */}
-        <div className="bg-gradient-to-r from-blue-900/40 to-slate-800/40 backdrop-blur-md rounded-2xl p-8 md:p-12 border border-slate-700/50 shadow-2xl flex flex-col items-center justify-center text-center">
-          <h2 className="text-3xl font-bold text-white mb-6">Добро пожаловать</h2>
-          <p className="text-blue-100 mb-10 max-w-2xl text-xl leading-relaxed opacity-90">
+        <div className="bg-gradient-to-r from-blue-900/40 to-slate-800/40 backdrop-blur-md rounded-2xl p-6 md:p-12 border border-slate-700/50 shadow-2xl flex flex-col items-center justify-center text-center">
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-4 md:mb-6">Добро пожаловать</h2>
+          <p className="text-blue-100 mb-8 md:mb-10 max-w-2xl text-base md:text-xl leading-relaxed opacity-90">
             А теперь Вам предстоит выполнить специальное задание на сортировку слов и картинок. Оно займет около 3-5 минут. И помните нет неправильных ответов, отвечайте не задумываясь:)
           </p>
           <button 
             onClick={startTest}
-            className="bg-emerald-600 hover:bg-emerald-500 text-white text-xl font-bold py-4 px-12 rounded-full shadow-lg shadow-emerald-500/20 transform hover:scale-105 transition-all active:scale-95 border-t border-emerald-400/20"
+            className="w-full md:w-auto bg-emerald-600 hover:bg-emerald-500 text-white text-lg md:text-xl font-bold py-3 md:py-4 px-8 md:px-12 rounded-full shadow-lg shadow-emerald-500/20 transform hover:scale-105 transition-all active:scale-95 border-t border-emerald-400/20"
           >
-            Начать Тест
+            Далее
           </button>
         </div>
 
