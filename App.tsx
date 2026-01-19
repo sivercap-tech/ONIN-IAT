@@ -47,13 +47,7 @@ const AppContent = () => {
   const [testActive, setTestActive] = useState(false);
 
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    // Ищем параметр 
-    const existingId = urlParams.get('external_id') || urlParams.get('id');
-    // Если ID есть, используем его. Если нет — генерируем новый (как раньше)
-    const userId = existingId || generateUUID();
-    const referrer = document.referrer || "direct";    
-
+    // Initialize Session with Counterbalancing
     const userId = generateUUID();
     const referrer = document.referrer || "direct";
     
