@@ -8,9 +8,6 @@ const getRandom = (arr: any[]) => arr[Math.floor(Math.random() * arr.length)];
 
 // Generate blocks based on counterbalancing group
 const getBlocks = (group: 'A' | 'B'): BlockConfig[] => {
-  // Group A: Standard (Bashkir+Horse vs Russian+Cow)
-  // Group B: Inverted (Bashkir+Cow vs Russian+Horse)
-  
   const isGroupA = group === 'A';
 
   const combinedBlock1_Left = isGroupA 
@@ -24,9 +21,6 @@ const getBlocks = (group: 'A' | 'B'): BlockConfig[] => {
   const combinedBlock1_Instruct = isGroupA
     ? "Нажимайте 'E' для БАШКИРЫ или ЛОШАДИ.\nНажимайте 'I' для РУССКИЕ или КОРОВЫ."
     : "Нажимайте 'E' для БАШКИРЫ или КОРОВЫ.\nНажимайте 'I' для РУССКИЕ или ЛОШАДИ.";
-
-  // After swapping words in Block 5 (Russian is now Left, Bashkir is Right)
-  // We need to swap the images to match the *opposite* pairing logic of the first combined block
   
   const combinedBlock2_Left = isGroupA
     ? [Category.RUSSIAN, Category.HORSE]
@@ -100,7 +94,7 @@ const getBlocks = (group: 'A' | 'B'): BlockConfig[] => {
   ];
 };
 
-const IATTest = ({ session, onComplete }: { session: UserSession, onComplete: () => void }) => {
+const IATTest = ({ session, onComplete }: { session: UserSession | null, onComplete: () => void }) => {
   // New State: General Instructions before starting blocks
   const [showGeneralIntro, setShowGeneralIntro] = useState(true);
 
@@ -118,11 +112,12 @@ const IATTest = ({ session, onComplete }: { session: UserSession, onComplete: ()
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
-  // Initialize blocks based on session group
-  const blocks = useMemo(() => getBlocks(session.group), [session.group]);
+  // SAFE ACCESS: Use optional chaining and default fallback to prevent crash if session is null
+  const group = session?.group || 'A';
+  const blocks = useMemo(() => getBlocks(group), [group]);
   const currentBlock = blocks[currentBlockIndex];
 
-  // Buffer references to avoid closure staleness in event listeners
+  // Buffer references to avoid closure staleness
   const stateRef = useRef({
     showGeneralIntro,
     currentBlockIndex,
@@ -155,11 +150,11 @@ const IATTest = ({ session, onComplete }: { session: UserSession, onComplete: ()
   }, [showGeneralIntro, currentBlockIndex, isInstruction, currentStimulus, startTime, mistake, trialCount, finished, isSaving, isTransitioning, blocks]);
 
   const finishTest = useCallback(async (finalResults: any[]) => {
+    if (!session) return; // Guard logic
+
     setFinished(true);
     setIsSaving(true);
     
-    // Include group info in the payload implicitly via the session object or explicitly in the results structure if needed.
-    // Here we save the raw results, and the session object (containing group) is passed to the service.
     const response = await saveResults(session, {
       group: session.group,
       data: finalResults
@@ -172,6 +167,8 @@ const IATTest = ({ session, onComplete }: { session: UserSession, onComplete: ()
   }, [session]);
 
   const handleNextTest = async () => {
+    if (!session) return;
+
     setIsTransitioning(true);
     await recordTransition(session);
 
@@ -186,7 +183,6 @@ const IATTest = ({ session, onComplete }: { session: UserSession, onComplete: ()
     if (stateRef.current.trialCount >= block.trials) {
       // End of block
       if (currentBlockIndex >= blocksLocal.length - 1) {
-        // Pass the current accumulated results to finishTest
         finishTest(results); 
         return;
       }
@@ -196,7 +192,6 @@ const IATTest = ({ session, onComplete }: { session: UserSession, onComplete: ()
       return;
     }
 
-    // Pick a stimulus that matches active categories
     const validCategories = [...block.leftCategories, ...block.rightCategories];
     const pool = STIMULI_POOL.filter(s => validCategories.includes(s.category));
     const nextStim = getRandom(pool);
@@ -211,16 +206,13 @@ const IATTest = ({ session, onComplete }: { session: UserSession, onComplete: ()
     const state = stateRef.current;
     if (state.finished || state.isSaving || state.isTransitioning) return;
 
-    // Handle General Intro Screen
     if (state.showGeneralIntro) {
       if (action === 'SPACE') {
         setShowGeneralIntro(false);
-        // We are already at block 0, instruction true by default.
       }
       return;
     }
 
-    // Handle Block Instruction Screen
     if (state.isInstruction) {
       if (action === 'SPACE') {
         setIsInstruction(false);
@@ -229,11 +221,9 @@ const IATTest = ({ session, onComplete }: { session: UserSession, onComplete: ()
       return;
     }
 
-    // Handle Test
     if (!state.currentStimulus) return;
 
     const block = state.blocks[state.currentBlockIndex];
-    
     let isLeft = false; 
     let isRight = false;
     
@@ -247,14 +237,13 @@ const IATTest = ({ session, onComplete }: { session: UserSession, onComplete: ()
 
     if (correctSide !== pressedSide) {
       setMistake(true);
-      // In standard IAT, user must correct the mistake. Time continues.
     } else {
       const endTime = performance.now();
       const rt = endTime - state.startTime;
       
       const result = {
         blockId: block.id,
-        blockName: block.title, // Helpful for analysis
+        blockName: block.title,
         stimulusId: state.currentStimulus.id,
         category: state.currentStimulus.category,
         isCorrect: !state.mistake,
@@ -262,7 +251,6 @@ const IATTest = ({ session, onComplete }: { session: UserSession, onComplete: ()
         timestamp: Date.now()
       };
 
-      // Update results locally
       setResults(prev => [...prev, result]);
       
       const isLastBlock = state.currentBlockIndex >= state.blocks.length - 1;
@@ -276,21 +264,10 @@ const IATTest = ({ session, onComplete }: { session: UserSession, onComplete: ()
     }
   }, [nextTrial, results, finishTest]);
 
-  const handleShare = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      // setIsCopied(true); // Assuming this state exists or was meant to exist
-      // setTimeout(() => setIsCopied(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy: ', err);
-    }
-  };
-
   useEffect(() => {
     const listener = (e: KeyboardEvent) => {
-      // Use e.code to ignore keyboard layout (English vs Russian)
       if (e.code === 'Space') {
-        e.preventDefault(); // Prevent scrolling
+        e.preventDefault();
         handleInput('SPACE');
       }
       if (e.code === 'KeyE') handleInput('LEFT');
@@ -302,7 +279,7 @@ const IATTest = ({ session, onComplete }: { session: UserSession, onComplete: ()
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     const target = e.target as HTMLImageElement;
-    target.style.display = 'none'; // Hide broken image
+    target.style.display = 'none';
     const parent = target.parentElement;
     if (parent) {
       const errorText = document.createElement('span');
@@ -312,6 +289,17 @@ const IATTest = ({ session, onComplete }: { session: UserSession, onComplete: ()
     }
     console.warn(`Failed to load image: ${target.src}`);
   };
+
+  // !!! CRITICAL SAFETY CHECK !!!
+  if (!session) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-900 text-white p-8 text-center">
+         <h1 className="text-2xl text-red-400 mb-4">Ошибка сессии</h1>
+         <p>Не удалось загрузить данные пользователя. Попробуйте обновить страницу.</p>
+         <button onClick={() => window.location.reload()} className="mt-4 px-4 py-2 bg-slate-700 rounded hover:bg-slate-600">Обновить</button>
+      </div>
+    );
+  }
 
   if (finished) {
     return (
@@ -352,186 +340,12 @@ const IATTest = ({ session, onComplete }: { session: UserSession, onComplete: ()
     );
   }
 
-  // General Intro Screen (before any blocks)
-  if (showGeneralIntro) {
-    return (
-      <div 
-        className="flex flex-col items-center justify-center min-h-screen bg-slate-900 text-white p-4 md:p-8 text-center max-w-7xl mx-auto cursor-pointer"
-        onClick={() => handleInput('SPACE')}
-      >
-        <div className="bg-slate-800 p-8 rounded-xl border border-slate-700 shadow-2xl mb-8 w-full">
-          <p className="text-xl md:text-2xl leading-relaxed text-slate-200 mb-8 max-w-4xl mx-auto">
-            Постарайтесь действовать как можно быстрее, но при этом сохранять внимательность, чтобы допустить минимум ошибок. 
-            <br/><br/>
-            Вы будете использовать клавиши 
-            <span className="font-bold text-emerald-400 mx-2">'E'</span> и 
-            <span className="font-bold text-blue-400 mx-2">'I'</span> 
-            на клавиатуре, чтобы как можно быстрее относить слова и картинки к разным группам. 
-            <br/><br/>
-            Если вы ошибетесь, на экране появится <span className="text-red-500 font-bold">X</span> красного цвета. Нажмите другую кнопку для продолжения.
-            <br/><br/>
-            Ниже показаны четыре группы и примеры элементов, которые к ним относятся:
-          </p>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-left">
-            {/* Bashkirs */}
-            <div className="bg-slate-900/60 p-5 rounded-lg border border-slate-700">
-              <h3 className="font-bold text-emerald-400 text-xl mb-4 text-center border-b border-slate-700 pb-2">Башкиры</h3>
-              <ul className="text-slate-300 space-y-1 text-sm text-center">
-                {BASHKIR_WORDS.map((w) => <li key={w}>{w}</li>)}
-              </ul>
-            </div>
-
-            {/* Russians */}
-            <div className="bg-slate-900/60 p-5 rounded-lg border border-slate-700">
-              <h3 className="font-bold text-blue-400 text-xl mb-4 text-center border-b border-slate-700 pb-2">Русские</h3>
-              <ul className="text-slate-300 space-y-1 text-sm text-center">
-                {RUSSIAN_WORDS.map((w) => <li key={w}>{w}</li>)}
-              </ul>
-            </div>
-
-            {/* Horses */}
-            <div className="bg-slate-900/60 p-5 rounded-lg border border-slate-700">
-              <h3 className="font-bold text-emerald-400 text-xl mb-4 text-center border-b border-slate-700 pb-2">Лошади</h3>
-              <div className="grid grid-cols-2 gap-2">
-                {HORSE_IMAGES.slice(0, 4).map((src, i) => (
-                  <div key={i} className="aspect-square bg-slate-800 rounded overflow-hidden">
-                    <img src={src} className="w-full h-full object-cover" alt="Horse" onError={handleImageError} />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Cows */}
-            <div className="bg-slate-900/60 p-5 rounded-lg border border-slate-700">
-              <h3 className="font-bold text-blue-400 text-xl mb-4 text-center border-b border-slate-700 pb-2">Коровы</h3>
-              <div className="grid grid-cols-2 gap-2">
-                 {COW_IMAGES.slice(0, 4).map((src, i) => (
-                  <div key={i} className="aspect-square bg-slate-800 rounded overflow-hidden">
-                    <img src={src} className="w-full h-full object-cover" alt="Cow" onError={handleImageError} />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="animate-pulse text-emerald-400 font-bold text-xl md:text-2xl mt-4">
-          Нажмите ПРОБЕЛ, чтобы продолжить
-        </div>
-      </div>
-    );
-  }
-
-  // Instruction Screen (for Blocks)
-  if (isInstruction) {
-    return (
-      <div 
-        className="flex flex-col items-center justify-center min-h-screen bg-slate-900 text-white p-8 text-center max-w-5xl mx-auto cursor-pointer"
-        onClick={() => handleInput('SPACE')} // Allow click to start
-      >
-        <h2 className="text-2xl font-bold mb-4 text-blue-400">{currentBlock.title}</h2>
-        <div className="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-2xl mb-6 select-none w-full max-w-3xl">
-          <pre className="whitespace-pre-wrap font-sans text-xl leading-relaxed text-slate-200 mb-4">
-            {currentBlock.instruction}
-          </pre>
-          
-          {/* Block 1: Words - Bashkir (Left), Russian (Right) */}
-          {currentBlock.id === 1 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 text-left border-t border-slate-600 pt-4">
-              <div className="bg-slate-900/50 p-4 rounded-lg">
-                <h3 className="font-bold text-emerald-400 mb-2 text-center">Башкирские (E)</h3>
-                <div className="flex flex-wrap gap-2 justify-center">
-                  {BASHKIR_WORDS.map(w => (
-                    <span key={w} className="px-2 py-1 bg-emerald-900/40 border border-emerald-500/30 rounded text-sm text-emerald-100">{w}</span>
-                  ))}
-                </div>
-              </div>
-              <div className="bg-slate-900/50 p-4 rounded-lg">
-                <h3 className="font-bold text-blue-400 mb-2 text-center">Русские (I)</h3>
-                <div className="flex flex-wrap gap-2 justify-center">
-                  {RUSSIAN_WORDS.map(w => (
-                    <span key={w} className="px-2 py-1 bg-blue-900/40 border border-blue-500/30 rounded text-sm text-blue-100">{w}</span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Block 5: Words - Russian (Left), Bashkir (Right) */}
-          {currentBlock.id === 5 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 text-left border-t border-slate-600 pt-4">
-              <div className="bg-slate-900/50 p-4 rounded-lg">
-                <h3 className="font-bold text-emerald-400 mb-2 text-center">Русские (E)</h3>
-                <div className="flex flex-wrap gap-2 justify-center">
-                  {RUSSIAN_WORDS.map(w => (
-                    <span key={w} className="px-2 py-1 bg-emerald-900/40 border border-emerald-500/30 rounded text-sm text-emerald-100">{w}</span>
-                  ))}
-                </div>
-              </div>
-              <div className="bg-slate-900/50 p-4 rounded-lg">
-                <h3 className="font-bold text-blue-400 mb-2 text-center">Башкирские (I)</h3>
-                <div className="flex flex-wrap gap-2 justify-center">
-                  {BASHKIR_WORDS.map(w => (
-                    <span key={w} className="px-2 py-1 bg-blue-900/40 border border-blue-500/30 rounded text-sm text-blue-100">{w}</span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Block 2: Images - Horse (Left), Cow (Right) */}
-          {currentBlock.id === 2 && (
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 border-t border-slate-600 pt-4">
-                <div className="bg-slate-900/50 p-4 rounded-lg">
-                  <h3 className="font-bold text-emerald-400 mb-2 text-center">Лошади (E)</h3>
-                  <div className="flex justify-center gap-2 flex-wrap">
-                     {HORSE_IMAGES.map((src, i) => (
-                       <div key={i} className="flex items-center justify-center bg-slate-800 rounded border border-slate-600 w-14 h-14 overflow-hidden">
-                         <img 
-                           src={src} 
-                           className="w-full h-full object-cover" 
-                           alt={`Horse ${i+1}`}
-                           onError={handleImageError}
-                         />
-                       </div>
-                     ))}
-                  </div>
-                </div>
-                <div className="bg-slate-900/50 p-4 rounded-lg">
-                  <h3 className="font-bold text-blue-400 mb-2 text-center">Коровы (I)</h3>
-                  <div className="flex justify-center gap-2 flex-wrap">
-                     {COW_IMAGES.map((src, i) => (
-                       <div key={i} className="flex items-center justify-center bg-slate-800 rounded border border-slate-600 w-14 h-14 overflow-hidden">
-                         <img 
-                           src={src} 
-                           className="w-full h-full object-cover" 
-                           alt={`Cow ${i+1}`}
-                           onError={handleImageError}
-                         />
-                       </div>
-                     ))}
-                  </div>
-                </div>
-             </div>
-          )}
-
-        </div>
-        <div className="animate-pulse text-emerald-400 font-bold text-lg">
-          Нажмите ПРОБЕЛ, чтобы начать
-        </div>
-      </div>
-    );
-  }
-
-  // Test Screen
+  // --- MOBILE TEMPLATE ---
   return (
     <div className="flex flex-col h-screen bg-slate-900 text-white overflow-hidden select-none">
       
-      {/* --- MOBILE TEMPLATE (Header) --- */}
-      {/* Visible only on mobile (md:hidden). Compact, no large margins, progress bar at top edge. */}
+      {/* Mobile Header */}
       <div className="md:hidden flex flex-col w-full bg-slate-900 pt-2 pb-1">
-         {/* Top Edge Progress Bar */}
          <div className="w-full h-1 bg-slate-800 mb-2">
              <div 
                className="h-full bg-emerald-500 transition-all duration-300 ease-out" 
@@ -558,8 +372,7 @@ const IATTest = ({ session, onComplete }: { session: UserSession, onComplete: ()
          </div>
       </div>
 
-      {/* --- DESKTOP TEMPLATE (Header) --- */}
-      {/* Hidden on mobile (hidden md:flex). Uses the spacious, centered layout requested previously. */}
+      {/* Desktop Header */}
       <div className="hidden md:flex justify-between items-center p-4 md:p-6 h-28 md:h-32 w-full max-w-5xl mx-auto mt-4">
         <div className="flex-1 text-left text-lg md:text-2xl font-bold uppercase tracking-wider text-blue-400 leading-tight">
           {currentBlock.leftCategories.map(c => (
@@ -567,7 +380,6 @@ const IATTest = ({ session, onComplete }: { session: UserSession, onComplete: ()
           ))}
         </div>
 
-        {/* Progress Indicator */}
         <div className="flex flex-col items-center justify-start w-24 pt-1 mx-2">
           <div className="text-slate-500 text-[10px] md:text-xs font-medium uppercase tracking-widest mb-1 whitespace-nowrap">
             Блок {currentBlockIndex + 1}
@@ -589,34 +401,58 @@ const IATTest = ({ session, onComplete }: { session: UserSession, onComplete: ()
 
       {/* Stimulus Area */}
       <div className="flex-1 flex flex-col items-center justify-center relative pointer-events-none">
-        {mistake && (
-          <div className="absolute text-red-500 text-8xl md:text-9xl font-bold animate-bounce opacity-80 z-20">
-            X
-          </div>
-        )}
         
-        {currentStimulus?.type === StimulusType.WORD && (
-          <div className="text-4xl md:text-7xl font-bold text-white drop-shadow-xl text-center px-4 max-w-4xl leading-tight">
-            {currentStimulus.content}
+        {/* Intro/Instruction Logic for Display */}
+        {showGeneralIntro && (
+          <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-slate-900 p-4 text-center pointer-events-auto overflow-y-auto">
+             {/* General Intro Content */}
+             <div className="bg-slate-800 p-8 rounded-xl border border-slate-700 shadow-2xl mb-8 w-full max-w-4xl cursor-pointer" onClick={() => handleInput('SPACE')}>
+                <p className="text-lg md:text-xl text-slate-200 mb-6">
+                  Постарайтесь действовать быстро, но без ошибок.<br/>
+                  Нажимайте <span className="text-emerald-400 font-bold">'E'</span> (лево) и <span className="text-blue-400 font-bold">'I'</span> (право).<br/>
+                  Нажмите ПРОБЕЛ, чтобы начать.
+                </p>
+                {/* Example Items grid here if needed... */}
+             </div>
           </div>
         )}
 
-        {currentStimulus?.type === StimulusType.IMAGE && (
-          <div className="flex flex-col items-center">
-            <img 
-              src={currentStimulus.content} 
-              alt="stimulus" 
-              onError={(e) => {
-                // Handle broken images in test flow
-                const target = e.target as HTMLImageElement;
-                target.style.display = 'none';
-                console.error("Missing Stimulus Image:", target.src);
-              }}
-              className="max-h-[30vh] md:max-h-[45vh] w-auto rounded-xl shadow-2xl border-4 border-slate-700 select-none pointer-events-none"
-            />
-            {/* Fallback text if image breaks (only visible if image hidden) */}
-            <div className="hidden">Изображение не найдено</div>
+        {!showGeneralIntro && isInstruction && (
+          <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-slate-900 p-4 text-center pointer-events-auto" onClick={() => handleInput('SPACE')}>
+             <h2 className="text-2xl font-bold mb-4 text-blue-400">{currentBlock.title}</h2>
+             <div className="bg-slate-800 p-6 rounded-xl border border-slate-700 max-w-2xl cursor-pointer">
+                <pre className="whitespace-pre-wrap font-sans text-xl text-slate-200">{currentBlock.instruction}</pre>
+                <div className="mt-4 text-emerald-400 animate-pulse">Нажмите ПРОБЕЛ</div>
+             </div>
           </div>
+        )}
+
+        {/* Actual Test Stimulus */}
+        {!showGeneralIntro && !isInstruction && (
+            <>
+                {mistake && (
+                  <div className="absolute text-red-500 text-8xl md:text-9xl font-bold animate-bounce opacity-80 z-20">
+                    X
+                  </div>
+                )}
+                
+                {currentStimulus?.type === StimulusType.WORD && (
+                  <div className="text-4xl md:text-7xl font-bold text-white drop-shadow-xl text-center px-4 max-w-4xl leading-tight">
+                    {currentStimulus.content}
+                  </div>
+                )}
+
+                {currentStimulus?.type === StimulusType.IMAGE && (
+                  <div className="flex flex-col items-center">
+                    <img 
+                      src={currentStimulus.content} 
+                      alt="stimulus" 
+                      onError={handleImageError}
+                      className="max-h-[30vh] md:max-h-[45vh] w-auto rounded-xl shadow-2xl border-4 border-slate-700 select-none pointer-events-none"
+                    />
+                  </div>
+                )}
+            </>
         )}
       </div>
 
