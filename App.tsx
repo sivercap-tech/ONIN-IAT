@@ -25,7 +25,7 @@ const Dashboard = ({ startTest }: { startTest: () => void }) => {
 
         {/* Start Test Card */}
         <div className="bg-gradient-to-r from-blue-900/40 to-slate-800/40 backdrop-blur-md rounded-2xl p-6 md:p-12 border border-slate-700/50 shadow-2xl flex flex-col items-center justify-center text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-4 md:mb-6">Спасибо что Вы еще с нами</h2>
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-4 md:mb-6">Добро пожаловать!</h2>
           <p className="text-blue-100 mb-8 md:mb-10 max-w-2xl text-base md:text-xl leading-relaxed opacity-90">
             Итак, вас ждет специальный психологический тест – тест имплицитных ассоциаций. Он обычно используется для того, чтобы выяснить, какие в обществе есть представления о разных вещах, в том числе национальных группах. Он может Вас удивить и немного утомить. Но чтобы все получилось, Вам надо пройти тест до конца и в точности следовать инструкции далее. 
           </p>
