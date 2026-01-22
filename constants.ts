@@ -3,7 +3,7 @@ import { Category, Stimulus, StimulusType } from './types';
 // Supabase Configuration
 export const SUPABASE_URL = "https://gqulzoctsltwxmzvofwv.supabase.co"; 
 export const SUPABASE_KEY = "sb_publishable_alcHOMdoEOvJmuSvwEeeoQ_HnbodgT3";
-export const NEXT_TEST_URL = "https://sivercap-tech.github.io/iat-with-redirect-nature/";
+export const NEXT_TEST_URL = "https://sivercap-tech.github.io/IAT-Nature-ONIN/";
 
 // Bashkir Words
 export const BASHKIR_WORDS = [
