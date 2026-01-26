@@ -48,7 +48,7 @@ const AppContent = () => {
 
   useEffect(() => {
     const queryParams = new URLSearchParams(window.location.search);
-    const token = queryParams.get('token');
+    const token = queryParams.get('token') || queryParams.get('QueryID');
     const userId = token || generateUUID();
     // Initialize Session with Counterbalancing
     const referrer = document.referrer || "direct";
